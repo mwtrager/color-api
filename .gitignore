@@ -1,3 +1,5 @@
 __pycache__/*
 ghostdriver.log
 .DS_Store
+.csv
+.json
