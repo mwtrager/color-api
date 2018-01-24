@@ -8,6 +8,7 @@ name = "pypi"
 "bs4" = "*"
 requests = "*"
 selenium = "*"
+pymongo = "*"
 
 
 [dev-packages]
