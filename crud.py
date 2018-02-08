@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+import pymongo
 from pprint import pprint
 import csv
 import json
@@ -23,16 +24,25 @@ reader = csv.DictReader(csvFile, fieldnames)
 out = json.dumps([row for row in reader])
 jsonFile.write(out)
 
+# don't need this anymore
 csvFile.close()
-jsonFile.close()
 
 # clear collection before adding again
 db.test.remove()
 
 jsonFile = open('json_palettes.json', 'r')
+line = jsonFile.readline()
+line.strip()
 
-for line in jsonFile:
-    line.strip()
-    db.test.insert_many(json.loads(line))
 
+# create the index, order matters
+db.test.create_index([("c1", pymongo.ASCENDING), ("c2", pymongo.ASCENDING), ("c3", pymongo.ASCENDING), ("c4", pymongo.ASCENDING)], unique=True, name="paletteIndex")
+
+# NOTE catches all errors, but we want to change this to ignore duplicates
+try:
+  result = db.test.insert_many(json.loads(line))
+except pymongo.errors.BulkWriteError as e:
+  print(e.details['writeErrors'])
+
+# close jsonFile
 jsonFile.close()
