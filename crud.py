@@ -23,26 +23,33 @@ fieldnames = ['c1', 'c2', 'c3', 'c4']
 reader = csv.DictReader(csvFile, fieldnames)
 out = json.dumps([row for row in reader])
 jsonFile.write(out)
-
-# don't need this anymore
 csvFile.close()
 
-# clear collection before adding again
+# drop contents of collection and recreate index on empty db (testing)
 db.test.remove()
+try:
+    db.test.drop_index('paletteIndex')
+    db.test.create_index([("c1", pymongo.ASCENDING), ("c2", pymongo.ASCENDING), ("c3", pymongo.ASCENDING), ("c4", pymongo.ASCENDING)], unique=True, name="paletteIndex")
+except: # NOTE this is bad
+    print('error hit')
 
+# prep input JSON object (line) and insert_many
 jsonFile = open('json_palettes.json', 'r')
 line = jsonFile.readline()
 line.strip()
-
-
-# create the index, order matters
-db.test.create_index([("c1", pymongo.ASCENDING), ("c2", pymongo.ASCENDING), ("c3", pymongo.ASCENDING), ("c4", pymongo.ASCENDING)], unique=True, name="paletteIndex")
-
-# NOTE catches all errors, but we want to change this to ignore duplicates
 try:
-  result = db.test.insert_many(json.loads(line))
+    # NOTE without ordered=False, encountering a dupe will STOP remaining inserts in the queue
+    # with ordered=False, mongod be able to move on. i think it's recommended to always use this with insert_many
+    result = db.test.insert_many(json.loads(line), ordered=False)
 except pymongo.errors.BulkWriteError as e:
-  print(e.details['writeErrors'])
-
-# close jsonFile
+    print('Error during insert_many()...')
+    pprint(e.details['writeErrors'])
 jsonFile.close()
+
+# test query...
+docs = db.test.find({"c4": "#eeeeee"})
+for doc in docs:
+    print(doc)
+
+# close connection
+client.close()
