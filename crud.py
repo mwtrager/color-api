@@ -26,12 +26,12 @@ jsonFile.write(out)
 csvFile.close()
 
 # drop contents of collection and recreate index on empty db (testing)
-db.test.remove()
-try:
-    db.test.drop_index('paletteIndex')
-    db.test.create_index([("c1", pymongo.ASCENDING), ("c2", pymongo.ASCENDING), ("c3", pymongo.ASCENDING), ("c4", pymongo.ASCENDING)], unique=True, name="paletteIndex")
-except: # NOTE this is bad
-    print('error hit')
+# db.test.remove()
+# try:
+#     db.test.drop_index('paletteIndex')
+#     db.test.create_index([("c1", pymongo.ASCENDING), ("c2", pymongo.ASCENDING), ("c3", pymongo.ASCENDING), ("c4", pymongo.ASCENDING)], unique=True, name="paletteIndex")
+# except: # NOTE this is bad
+#     print('error hit')
 
 # prep input JSON object (line) and insert_many
 jsonFile = open('json_palettes.json', 'r')
@@ -42,8 +42,14 @@ try:
     # with ordered=False, mongod be able to move on. i think it's recommended to always use this with insert_many
     result = db.test.insert_many(json.loads(line), ordered=False)
 except pymongo.errors.BulkWriteError as e:
-    print('Error during insert_many()...')
-    pprint(e.details['writeErrors'])
+    errors = e.details['writeErrors']
+    dupecount = 0
+    for error in errors:
+        if error['code'] == 11000: # mongoDB duplicate error code
+            dupecount = dupecount + 1
+        else:
+            print(error['errmsg'])
+    print(dupecount, 'duplicates')
 jsonFile.close()
 
 # test query...
