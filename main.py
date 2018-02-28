@@ -16,7 +16,10 @@ driver.execute_script('window.scrollTo(0,document.querySelector("#container").sc
 time.sleep(3) # NOTE without this sleep, the source doesn't get updated quick enough
 after_source = driver.page_source
 
-target = 2000
+# NOTE it seems that when there is nothing left to grab(?) then count never increases
+    # recommended to add a check that if the count doesnt increase for a few iterations
+    # terminate this loop
+target = 400
 count = 0
 iteration = 0
 while count < target:
@@ -28,11 +31,9 @@ while count < target:
     soup = ws.soupify(driver.page_source)
     palettes = ws.get_palettes(soup) # TODO rewrite with selenium
     # kinda wanna do like "if we see one, add to count"
-    # that way i dont actually save it until i hit the source the bs4
     count = len(palettes[:-1])
     print('current count is:', len(palettes[:-1]), 'on iteration', iteration)
     iteration = iteration + 1
-
 
 print('count is', count)
 print('grabbing all of them...')

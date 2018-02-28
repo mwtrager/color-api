@@ -25,6 +25,8 @@ out = json.dumps([row for row in reader])
 jsonFile.write(out)
 csvFile.close()
 
+# NOTE probably don't need this code anymore...
+    # needs to be moved to a "seed" file of some kind.
 # drop contents of collection and recreate index on empty db (testing)
 # db.test.remove()
 # try:
@@ -49,13 +51,13 @@ except pymongo.errors.BulkWriteError as e:
             dupecount = dupecount + 1
         else:
             print(error['errmsg'])
-    print(dupecount, 'duplicates')
+    print(dupecount, 'inserts failed because of duplicates')
 jsonFile.close()
 
 # test query...
-docs = db.test.find({"c4": "#eeeeee"})
-for doc in docs:
-    print(doc)
+# docs = db.test.find({"c4": "#eeeeee"})
+# for doc in docs:
+#     print(doc)
 
 # close connection
 client.close()
